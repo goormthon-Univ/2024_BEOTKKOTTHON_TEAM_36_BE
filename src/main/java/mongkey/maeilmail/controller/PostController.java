@@ -38,15 +38,18 @@ public class PostController {
         return postService.savePost(requestDto);
     }
 
+    /*게시글 조회*/
     @PatchMapping("/post/{post_id}")
     public ApiResponse<?> updatePost(@PathVariable Long post_id,
                                      @RequestBody UpdatePostRequestDto requestDto){
         return postService.updatePost(post_id, requestDto);
     }
 
+    /*게시글 삭제*/
     @DeleteMapping("/post/{post_id}")
-    public ApiResponse<?> deletePost(@PathVariable Long post_id){
-        return postService.deletePost(post_id);
+    public ApiResponse<?> deletePost(@PathVariable Long post_id,
+                                     @RequestParam("user_id") Long user_id){
+        return postService.deletePost(post_id, user_id);
     }
 
     @GetMapping("/post/{post_id}/like")

@@ -112,13 +112,17 @@ public class PostService {
     }
 
     @Transactional
-    public ApiResponse<?> deletePost(Long post_id){
+    public ApiResponse<?> deletePost(Long post_id, Long user_id){
         Optional<Post> findPost = postRepository.findById(post_id);
         if (!findPost.isPresent()){
             return ApiResponse.failure(Error.NO_PERMISSION_TO_POST, "찾으려는 게시글이 없습니다");
         }
+        //해당 게시글을 등록한 유저가 아니라면
+        if (!findPost.get().getUser().getId().equals(user_id)){
+            return ApiResponse.failure(Error.NO_PERMISSION_TO_POST, "해당 게시글에 대한 권한이 없습니");
+        }
         postRepository.deleteById(post_id);
-        return ApiResponse.success(Success.CREATE_POST_SUCCESS, "게시글 삭제를 완료했습니다");
+        return ApiResponse.success(Success.DELETE_POST_SUCCESS, "게시글 삭제를 완료했습니다");
     }
 
 

@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import mongkey.maeilmail.common.response.ApiResponse;
 import mongkey.maeilmail.common.response.Error;
 import mongkey.maeilmail.common.response.Success;
+import mongkey.maeilmail.config.jwt.JwtTokenProvider;
 import mongkey.maeilmail.domain.Admin;
 import mongkey.maeilmail.domain.User;
+import mongkey.maeilmail.dto.token.TokenResponse;
 import mongkey.maeilmail.dto.admin.request.JoinAdminRequestDto;
 import mongkey.maeilmail.dto.admin.request.LoginAdminRequestDto;
 import mongkey.maeilmail.dto.user.request.JoinUserRequestDto;
@@ -26,6 +28,9 @@ public class MemberService {
 
     @Autowired
     private final UserRepository userRepository;
+
+    @Autowired
+    private final JwtTokenProvider jwtTokenProvider;
 
     /*유저 회원가입*/
     @Transactional
@@ -58,7 +63,8 @@ public class MemberService {
             return ApiResponse.failure(Error.ERROR, "비밀번호가 틀렸습니다");
         }
 
-        return ApiResponse.success(Success.SUCCESS, findUser);
+        // 토큰 발급
+        return ApiResponse.success(Success.SUCCESS, new TokenResponse(createToken(requestDto), "bearer", findUser.get().getId()));
     }
 
     /*관리자 회원가입*/
@@ -67,7 +73,7 @@ public class MemberService {
 
         Optional<Admin> findAdmin = adminRepository.findByEmployeeNumber(requestDto.getEmployee_number());
 
-        //이미 가입된 유저
+        //이미 가입된 관리자
         if (findAdmin.isPresent()){
             return ApiResponse.failure(Error.ERROR, "이미 등록된 관리자입니다");
         }
@@ -94,5 +100,12 @@ public class MemberService {
         }
 
         return ApiResponse.success(Success.SUCCESS, findAdmin);
+    }
+
+    /*토큰 발행*/
+    public String createToken(LoginUserRequestDto requestDto) {
+        Optional<User> findUser = userRepository.findByLoginId(requestDto.getLogin_id());
+        findUser.orElseThrow(IllegalArgumentException::new);
+        return jwtTokenProvider.createToken(findUser.get().getName());
     }
 }
